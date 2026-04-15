@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brainstorm Map — KSH</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --border: rgba(255,255,255,0.07);
+      --text: #f0f0f5;
+      --muted: #6b6b80;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      user-select: none;
+    }
+
+    /* ── Toolbar ── */
+    #toolbar {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(19,19,26,0.92);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 8px 16px;
+      backdrop-filter: blur(20px);
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 95vw;
+    }
+    #toolbar .logo {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      margin-right: 4px;
+    }
+    .tb-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .tb-btn:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.2); }
+    .tb-btn.active { background: rgba(99,102,241,0.25); border-color: rgba(99,102,241,0.5); color: #a5b4fc; }
+    .tb-btn.danger:hover { background: rgba(220,38,38,0.15); border-color: rgba(220,38,38,0.4); color: #f87171; }
+    .tb-btn.summary { background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.3); color: #6ee7b7; }
+    .tb-btn.summary:hover { background: rgba(16,185,129,0.25); }
+    .tb-sep { width: 1px; height: 20px; background: var(--border); }
+    #zoom-label { font-size: 0.72rem; color: var(--muted); min-width: 38px; text-align: center; }
+
+    /* ── Category select ── */
+    #cat-select {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      outline: none;
+    }
+    #cat-select option { background: #13131a; color: var(--text); }
+
+    /* ── Hints ── */
+    #hints {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      display: flex;
+      gap: 16px;
+      background: rgba(19,19,26,0.88);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 20px;
+      backdrop-filter: blur(12px);
+    }
+    #hints span { font-size: 0.72rem; color: var(--muted); }
+    #hints kbd {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 0.7rem;
+      color: var(--text);
+    }
+    #mode-hint {
+      position: fixed;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 110;
+      background: rgba(99,102,241,0.2);
+      border: 1px solid rgba(99,102,241,0.4);
+      color: #a5b4fc;
+      padding: 8px 20px;
+      border-radius: 100px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      backdrop-filter: blur(12px);
+      display: none;
+    }
+
+    /* ── Canvas ── */
+    #canvas {
+      position: absolute;
+      inset: 0;
+      cursor: grab;
+    }
+    #canvas.grabbing { cursor: grabbing; }
+    #canvas.connecting { cursor: crosshair; }
+
+    svg#connections {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    /* ── Node ── */
+    .node {
+      position: absolute;
+      border-radius: 14px;
+      padding: 10px 18px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: box-shadow 0.2s, transform 0.15s;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+      min-width: 120px;
+      max-width: 260px;
+      word-break: break-word;
+      line-height: 1.35;
+      border: 1.5px solid transparent;
+    }
+    .node:hover { transform: scale(1.03); }
+    .node.selected { outline: 2px solid rgba(255,255,255,0.5); outline-offset: 3px; }
+    .node.connect-target { outline: 2px solid rgba(99,102,241,0.8); outline-offset: 3px; }
+    .node .cat-label {
+      font-size: 0.6rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      opacity: 0.7;
+      margin-bottom: 4px;
+    }
+    .node .node-text {
+      font-weight: 600;
+    }
+
+    /* Category colours */
+    .node[data-cat="pravidla"] { background: linear-gradient(135deg, #065f46, #059669); border-color: rgba(5,150,105,0.4); box-shadow: 0 0 14px rgba(5,150,105,0.15); color: #fff; }
+    .node[data-cat="hraci"] { background: linear-gradient(135deg, #0f4c9e, #1d64c8); border-color: rgba(29,100,200,0.5); box-shadow: 0 0 20px rgba(29,100,200,0.2); color: #fff; }
+    .node[data-cat="vizual"] { background: linear-gradient(135deg, #92400e, #d97706); border-color: rgba(217,119,6,0.4); box-shadow: 0 0 12px rgba(217,119,6,0.12); color: #fff; }
+    .node[data-cat="forma"] { background: linear-gradient(135deg, #831843, #db2777); border-color: rgba(219,39,119,0.4); box-shadow: 0 0 12px rgba(219,39,119,0.12); color: #fff; }
+    .node[data-cat="tema"] { background: linear-gradient(135deg, #6d28d9, #4f46e5); border-color: rgba(109,40,217,0.6); box-shadow: 0 0 40px rgba(109,40,217,0.3); color: #fff; }
+    .node[data-cat="poznamka"] { background: rgba(255,255,255,0.06); border-color: var(--border); color: var(--text); }
+    .node[data-cat="mechanika"] { background: linear-gradient(135deg, #701a75, #a21caf); border-color: rgba(162,28,175,0.4); box-shadow: 0 0 14px rgba(162,28,175,0.15); color: #fff; }
+    .node[data-cat="custom"] { background: linear-gradient(135deg, #334155, #475569); border-color: rgba(71,85,105,0.5); color: #fff; }
+
+    /* ── Inline edit ── */
+    .node-input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: inherit;
+      font: inherit;
+      font-weight: 600;
+      text-align: left;
+      width: 100%;
+      resize: none;
+      cursor: text;
+      user-select: text;
+      -webkit-user-select: text;
+      pointer-events: all;
+    }
+
+    /* ── Context menu ── */
+    #ctx-menu {
+      position: fixed;
+      z-index: 200;
+      background: rgba(19,19,26,0.97);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 6px;
+      min-width: 180px;
+      backdrop-filter: blur(20px);
+      display: none;
+    }
+    .ctx-item {
+      padding: 8px 12px;
+      border-radius: 7px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: background 0.12s;
+      color: var(--text);
+    }
+    .ctx-item:hover { background: rgba(255,255,255,0.07); }
+    .ctx-item.danger { color: #f87171; }
+    .ctx-item.danger:hover { background: rgba(220,38,38,0.12); }
+    .ctx-sep { height: 1px; background: var(--border); margin: 4px 0; }
+
+    /* ── Summary modal ── */
+    #summary-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    #summary-overlay.active { display: flex; }
+    #summary-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      max-width: 700px;
+      width: 90vw;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    #summary-box h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; }
+    #summary-box .sub { font-size: 0.78rem; color: var(--muted); margin-bottom: 16px; }
+    #summary-text {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 0.82rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      color: var(--text);
+      margin-bottom: 16px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      min-height: 200px;
+    }
+    #summary-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    #summary-actions button {
+      padding: 8px 20px;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      transition: all 0.15s;
+    }
+    #btn-copy-summary { background: rgba(99,102,241,0.2); color: #a5b4fc; border-color: rgba(99,102,241,0.4); }
+    #btn-copy-summary:hover { background: rgba(99,102,241,0.35); }
+    #btn-close-summary { background: transparent; color: var(--muted); }
+    #btn-close-summary:hover { background: rgba(255,255,255,0.05); }
+
+    /* ── Grid background ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Toolbar -->
+<div id="toolbar">
+  <span class="logo">KSH BRAINSTORM</span>
+  <div class="tb-sep"></div>
+  <select id="cat-select">
+    <option value="pravidla">Pravidla</option>
+    <option value="hraci">Hráči</option>
+    <option value="vizual">Vizuál</option>
+    <option value="forma">Forma</option>
+    <option value="tema">Téma</option>
+    <option value="mechanika">Mechanika</option>
+    <option value="poznamka">Poznámka</option>
+    <option value="custom">Vlastní</option>
+  </select>
+  <button class="tb-btn" id="btn-add">＋ Přidat</button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" id="btn-connect">Spojit nápady</button>
+  <button class="tb-btn danger" id="btn-del-edges">Smazat spoje</button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" id="btn-zoom-out">－</button>
+  <span id="zoom-label">100%</span>
+  <button class="tb-btn" id="btn-zoom-in">＋</button>
+  <button class="tb-btn" id="btn-reset-view">Střed</button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn summary" id="btn-summary">Shrnutí ↗</button>
+  <button class="tb-btn" id="btn-save">💾</button>
+  <button class="tb-btn danger" id="btn-clear">Smazat vše</button>
+</div>
+
+<!-- Mode hint -->
+<div id="mode-hint"></div>
+
+<!-- Hints -->
+<div id="hints">
+  <span><kbd>Klik</kbd> vybrat</span>
+  <span><kbd>2× klik</kbd> přejmenovat</span>
+  <span><kbd>Del</kbd> smazat</span>
+  <span><kbd>Scroll</kbd> zoom</span>
+  <span><kbd>Táhni</kbd> přesunout</span>
+  <span><kbd>Pravé tl.</kbd> menu</span>
+</div>
+
+<!-- Canvas -->
+<div id="canvas">
+  <svg id="connections"></svg>
+</div>
+
+<!-- Context menu -->
+<div id="ctx-menu">
+  <div class="ctx-item" id="ctx-rename">✏️ Přejmenovat</div>
+  <div class="ctx-item" id="ctx-change-cat">🏷 Změnit kategorii</div>
+  <div class="ctx-item" id="ctx-connect-from">🔗 Spojit s jiným</div>
+  <div class="ctx-item" id="ctx-disconnect">✂️ Odpojit vše</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item danger" id="ctx-delete">🗑 Smazat</div>
+</div>
+
+<!-- Summary modal -->
+<div id="summary-overlay">
+  <div id="summary-box">
+    <h2>Shrnutí brainstormingu</h2>
+    <p class="sub">Zkopíruj a vlož do AI pro zpracování a ucelenou analýzu.</p>
+    <div id="summary-text"></div>
+    <div id="summary-actions">
+      <button id="btn-close-summary">Zavřít</button>
+      <button id="btn-copy-summary">📋 Kopírovat</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Categories ────────────────────────────────────────────────────────────
+const CATEGORIES = {
+  pravidla:  { label: 'PRAVIDLA',  color: '#059669' },
+  hraci:     { label: 'HRÁČI',     color: '#1d64c8' },
+  vizual:    { label: 'VIZUÁL',    color: '#d97706' },
+  forma:     { label: 'FORMA',     color: '#db2777' },
+  tema:      { label: 'TÉMA',      color: '#7c3aed' },
+  mechanika: { label: 'MECHANIKA', color: '#a21caf' },
+  poznamka:  { label: 'POZNÁMKA',  color: '#6b6b80' },
+  custom:    { label: 'VLASTNÍ',   color: '#475569' },
+};
+
+// ── State ─────────────────────────────────────────────────────────────────
+let nodes = [];
+let edges = [];
+let selectedId = null;
+let nextId = 1;
+let zoom = 1;
+let panX = 0, panY = 0;
+let isDragging = false;
+let dragNodeId = null;
+let dragOffX = 0, dragOffY = 0;
+let isPanning = false;
+let panStartX = 0, panStartY = 0;
+let panOriginX = 0, panOriginY = 0;
+
+// Modes
+let connectMode = false;
+let connectFromId = null;
+let deleteEdgeMode = false;
+
+const canvas = document.getElementById('canvas');
+const svgEl = document.getElementById('connections');
+const ctxMenu = document.getElementById('ctx-menu');
+const modeHint = document.getElementById('mode-hint');
+
+// ── Init ──────────────────────────────────────────────────────────────────
+function init() {
+  const saved = localStorage.getItem('ksh-brainstorm');
+  if (saved) {
+    try {
+      const data = JSON.parse(saved);
+      nodes = data.nodes || [];
+      edges = data.edges || [];
+      nextId = data.nextId || (nodes.length + 1);
+    } catch(e) {}
+  }
+  render();
+  centerView();
+}
+
+// ── Create node ───────────────────────────────────────────────────────────
+function createNode(cat, label, x, y) {
+  const id = nextId++;
+  nodes.push({ id, cat: cat || 'poznamka', label: label || 'Nový nápad', x, y });
+  save();
+  render();
+  return id;
+}
+
+function getNode(id) { return nodes.find(n => n.id === id); }
+
+// ── Delete node ───────────────────────────────────────────────────────────
+function deleteNode(id) {
+  nodes = nodes.filter(n => n.id !== id);
+  edges = edges.filter(e => e.from !== id && e.to !== id);
+  if (selectedId === id) selectedId = null;
+  save();
+  render();
+}
+
+// ── Rename ────────────────────────────────────────────────────────────────
+function startRename(id) {
+  const el = document.getElementById('node-' + id);
+  if (!el) return;
+  const textEl = el.querySelector('.node-text');
+  if (!textEl) return;
+
+  const ta = document.createElement('textarea');
+  ta.className = 'node-input';
+  ta.value = getNode(id).label;
+  ta.rows = 1;
+  ta.style.minHeight = '1.4em';
+  ta.addEventListener('input', () => {
+    ta.style.height = 'auto';
+    ta.style.height = ta.scrollHeight + 'px';
+  });
+  ta.addEventListener('blur', () => finishRename(id, ta.value));
+  ta.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ta.blur(); }
+    if (e.key === 'Escape') { ta.value = getNode(id).label; ta.blur(); }
+    e.stopPropagation();
+  });
+  textEl.textContent = '';
+  textEl.appendChild(ta);
+  ta.focus();
+  ta.select();
+}
+
+function finishRename(id, val) {
+  const node = getNode(id);
+  if (node) node.label = val.trim() || 'Nápad';
+  save();
+  render();
+}
+
+// ── Render ────────────────────────────────────────────────────────────────
+function render() {
+  document.querySelectorAll('.node').forEach(el => el.remove());
+
+  nodes.forEach(node => {
+    const el = document.createElement('div');
+    el.className = 'node' + (selectedId === node.id ? ' selected' : '');
+    if (connectMode && connectFromId && connectFromId !== node.id) el.className += ' connect-target';
+    el.id = 'node-' + node.id;
+    el.dataset.id = node.id;
+    el.dataset.cat = node.cat || 'poznamka';
+
+    const catInfo = CATEGORIES[node.cat] || CATEGORIES.poznamka;
+    el.innerHTML = `<span class="cat-label">${catInfo.label}</span><span class="node-text">${escHtml(node.label)}</span>`;
+
+    el.style.left = (node.x * zoom + panX) + 'px';
+    el.style.top  = (node.y * zoom + panY) + 'px';
+    el.style.transform = `scale(${zoom})`;
+    el.style.transformOrigin = 'top left';
+    canvas.appendChild(el);
+
+    el.addEventListener('mousedown', e => onNodeMousedown(e, node.id));
+    el.addEventListener('dblclick', e => { e.stopPropagation(); startRename(node.id); });
+    el.addEventListener('contextmenu', e => { e.preventDefault(); showCtxMenu(e, node.id); });
+  });
+
+  drawEdges();
+  updateZoomLabel();
+}
+
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+
+// ── Draw edges ────────────────────────────────────────────────────────────
+function drawEdges() {
+  svgEl.innerHTML = '';
+  edges.forEach((edge, idx) => {
+    const from = getNode(edge.from);
+    const to   = getNode(edge.to);
+    if (!from || !to) return;
+
+    const fromEl = document.getElementById('node-' + from.id);
+    const toEl   = document.getElementById('node-' + to.id);
+    if (!fromEl || !toEl) return;
+
+    const fw = fromEl.offsetWidth * zoom;
+    const fh = fromEl.offsetHeight * zoom;
+    const tw = toEl.offsetWidth * zoom;
+    const th = toEl.offsetHeight * zoom;
+
+    const x1 = from.x * zoom + panX + fw / 2;
+    const y1 = from.y * zoom + panY + fh / 2;
+    const x2 = to.x * zoom + panX + tw / 2;
+    const y2 = to.y * zoom + panY + th / 2;
+
+    const cx = (x1 + x2) / 2;
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', `M ${x1} ${y1} C ${cx} ${y1}, ${cx} ${y2}, ${x2} ${y2}`);
+
+    const catFrom = CATEGORIES[from.cat] || CATEGORIES.poznamka;
+    path.setAttribute('stroke', catFrom.color);
+    path.setAttribute('stroke-width', Math.max(1.5, 2.5 * zoom));
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-opacity', '0.45');
+
+    // Clickable for delete mode
+    if (deleteEdgeMode) {
+      path.style.pointerEvents = 'stroke';
+      path.style.cursor = 'pointer';
+      path.setAttribute('stroke-width', Math.max(8, 10 * zoom));
+      path.setAttribute('stroke-opacity', '0.2');
+      path.addEventListener('click', () => {
+        edges.splice(idx, 1);
+        save();
+        render();
+        showToast('Spoj smazán');
+      });
+
+      // Visible line on top
+      const vis = path.cloneNode();
+      vis.setAttribute('stroke-width', Math.max(1.5, 2.5 * zoom));
+      vis.setAttribute('stroke-opacity', '0.6');
+      vis.style.pointerEvents = 'none';
+      svgEl.appendChild(path);
+      svgEl.appendChild(vis);
+    } else {
+      svgEl.appendChild(path);
+    }
+  });
+}
+
+// ── Node drag ─────────────────────────────────────────────────────────────
+function onNodeMousedown(e, id) {
+  if (e.button !== 0) return;
+  e.stopPropagation();
+
+  // Connect mode: clicking a target node
+  if (connectMode && connectFromId && connectFromId !== id) {
+    // Check if edge already exists
+    const exists = edges.find(ed =>
+      (ed.from === connectFromId && ed.to === id) ||
+      (ed.from === id && ed.to === connectFromId)
+    );
+    if (!exists) {
+      edges.push({ from: connectFromId, to: id });
+      save();
+      showToast('Nápady spojeny');
+    } else {
+      showToast('Už jsou spojené');
+    }
+    exitConnectMode();
+    return;
+  }
+
+  // Connect mode: first click — set source
+  if (connectMode && !connectFromId) {
+    connectFromId = id;
+    modeHint.textContent = '🔗 Klikni na druhý nápad pro spojení (Esc = zrušit)';
+    selectedId = id;
+    render();
+    return;
+  }
+
+  selectedId = id;
+  render();
+
+  const node = getNode(id);
+  const screenX = node.x * zoom + panX;
+  const screenY = node.y * zoom + panY;
+  dragOffX = e.clientX - screenX;
+  dragOffY = e.clientY - screenY;
+  dragNodeId = id;
+
+  const onMove = (ev) => {
+    isDragging = true;
+    const n = getNode(dragNodeId);
+    n.x = (ev.clientX - dragOffX - panX) / zoom;
+    n.y = (ev.clientY - dragOffY - panY) / zoom;
+    render();
+  };
+  const onUp = () => {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    if (isDragging) { save(); isDragging = false; }
+    dragNodeId = null;
+  };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+// ── Canvas pan ────────────────────────────────────────────────────────────
+canvas.addEventListener('mousedown', e => {
+  if (e.button !== 0 || (e.target !== canvas && e.target !== svgEl)) return;
+  if (connectMode) { exitConnectMode(); return; }
+
+  selectedId = null;
+  isPanning = true;
+  panStartX = e.clientX;
+  panStartY = e.clientY;
+  panOriginX = panX;
+  panOriginY = panY;
+  canvas.classList.add('grabbing');
+
+  const onMove = (ev) => {
+    panX = panOriginX + (ev.clientX - panStartX);
+    panY = panOriginY + (ev.clientY - panStartY);
+    render();
+  };
+  const onUp = () => {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    isPanning = false;
+    canvas.classList.remove('grabbing');
+  };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+});
+
+// ── Zoom ──────────────────────────────────────────────────────────────────
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? 0.9 : 1.1;
+  const mx = e.clientX, my = e.clientY;
+  panX = mx - (mx - panX) * delta;
+  panY = my - (my - panY) * delta;
+  zoom = Math.max(0.2, Math.min(3, zoom * delta));
+  render();
+}, { passive: false });
+
+function updateZoomLabel() {
+  document.getElementById('zoom-label').textContent = Math.round(zoom * 100) + '%';
+}
+
+function centerView() {
+  if (nodes.length === 0) { panX = 0; panY = 0; render(); return; }
+  const avgX = nodes.reduce((s, n) => s + n.x, 0) / nodes.length;
+  const avgY = nodes.reduce((s, n) => s + n.y, 0) / nodes.length;
+  panX = window.innerWidth / 2 - avgX * zoom;
+  panY = window.innerHeight / 2 - avgY * zoom;
+  render();
+}
+
+// ── Connect mode ──────────────────────────────────────────────────────────
+function enterConnectMode() {
+  connectMode = true;
+  connectFromId = null;
+  deleteEdgeMode = false;
+  canvas.classList.add('connecting');
+  document.getElementById('btn-connect').classList.add('active');
+  document.getElementById('btn-del-edges').classList.remove('active');
+  modeHint.textContent = '🔗 Klikni na první nápad (Esc = zrušit)';
+  modeHint.style.display = 'block';
+  render();
+}
+
+function exitConnectMode() {
+  connectMode = false;
+  connectFromId = null;
+  canvas.classList.remove('connecting');
+  document.getElementById('btn-connect').classList.remove('active');
+  modeHint.style.display = 'none';
+  render();
+}
+
+function enterDeleteEdgeMode() {
+  deleteEdgeMode = true;
+  connectMode = false;
+  connectFromId = null;
+  canvas.classList.remove('connecting');
+  document.getElementById('btn-connect').classList.remove('active');
+  document.getElementById('btn-del-edges').classList.add('active');
+  modeHint.textContent = '✂️ Klikni na spoj pro smazání (Esc = zrušit)';
+  modeHint.style.display = 'block';
+  render();
+}
+
+function exitDeleteEdgeMode() {
+  deleteEdgeMode = false;
+  document.getElementById('btn-del-edges').classList.remove('active');
+  modeHint.style.display = 'none';
+  render();
+}
+
+// ── Summary ───────────────────────────────────────────────────────────────
+function generateSummary() {
+  const lines = [];
+  lines.push('# BRAINSTORMING — SHRNUTÍ');
+  lines.push('');
+
+  // Group by category
+  const groups = {};
+  nodes.forEach(n => {
+    const cat = n.cat || 'poznamka';
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(n);
+  });
+
+  for (const [cat, items] of Object.entries(groups)) {
+    const catInfo = CATEGORIES[cat] || CATEGORIES.poznamka;
+    lines.push(`## ${catInfo.label}`);
+    items.forEach(n => {
+      lines.push(`- ${n.label}`);
+    });
+    lines.push('');
+  }
+
+  // Connections
+  if (edges.length > 0) {
+    lines.push('## SPOJENÍ (nápady které spolu souvisí)');
+    edges.forEach(e => {
+      const from = getNode(e.from);
+      const to = getNode(e.to);
+      if (from && to) {
+        lines.push(`- "${from.label}" ↔ "${to.label}"`);
+      }
+    });
+    lines.push('');
+  }
+
+  // Stats
+  lines.push('---');
+  lines.push(`Celkem nápadů: ${nodes.length}`);
+  lines.push(`Celkem spojení: ${edges.length}`);
+  lines.push(`Kategorií: ${Object.keys(groups).length}`);
+
+  return lines.join('\n');
+}
+
+function showSummary() {
+  document.getElementById('summary-text').textContent = generateSummary();
+  document.getElementById('summary-overlay').classList.add('active');
+}
+
+// ── Keyboard ──────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+
+  if (e.key === 'Escape') {
+    if (connectMode) exitConnectMode();
+    else if (deleteEdgeMode) exitDeleteEdgeMode();
+    else { selectedId = null; closeCtxMenu(); }
+    render();
+    return;
+  }
+
+  if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId) {
+    deleteNode(selectedId);
+  }
+});
+
+// ── Context menu ──────────────────────────────────────────────────────────
+let ctxTargetId = null;
+function showCtxMenu(e, id) {
+  ctxTargetId = id;
+  selectedId = id;
+  render();
+  ctxMenu.style.display = 'block';
+  ctxMenu.style.left = e.clientX + 'px';
+  ctxMenu.style.top  = e.clientY + 'px';
+  requestAnimationFrame(() => {
+    const r = ctxMenu.getBoundingClientRect();
+    if (r.right > window.innerWidth) ctxMenu.style.left = (e.clientX - r.width) + 'px';
+    if (r.bottom > window.innerHeight) ctxMenu.style.top = (e.clientY - r.height) + 'px';
+  });
+}
+function closeCtxMenu() { ctxMenu.style.display = 'none'; ctxTargetId = null; }
+document.addEventListener('click', e => { if (!ctxMenu.contains(e.target)) closeCtxMenu(); });
+
+document.getElementById('ctx-rename').addEventListener('click', () => { if (ctxTargetId) startRename(ctxTargetId); closeCtxMenu(); });
+document.getElementById('ctx-delete').addEventListener('click', () => { if (ctxTargetId) deleteNode(ctxTargetId); closeCtxMenu(); });
+document.getElementById('ctx-change-cat').addEventListener('click', () => {
+  if (!ctxTargetId) return;
+  const node = getNode(ctxTargetId);
+  const cats = Object.keys(CATEGORIES);
+  const idx = cats.indexOf(node.cat);
+  node.cat = cats[(idx + 1) % cats.length];
+  save(); render(); closeCtxMenu();
+});
+document.getElementById('ctx-connect-from').addEventListener('click', () => {
+  closeCtxMenu();
+  enterConnectMode();
+  if (ctxTargetId) {
+    connectFromId = ctxTargetId;
+    modeHint.textContent = '🔗 Klikni na druhý nápad pro spojení (Esc = zrušit)';
+    render();
+  }
+});
+document.getElementById('ctx-disconnect').addEventListener('click', () => {
+  if (!ctxTargetId) return;
+  edges = edges.filter(e => e.from !== ctxTargetId && e.to !== ctxTargetId);
+  save(); render(); closeCtxMenu();
+  showToast('Spoje odstraněny');
+});
+
+// ── Toolbar buttons ───────────────────────────────────────────────────────
+document.getElementById('btn-add').addEventListener('click', () => {
+  const cat = document.getElementById('cat-select').value;
+  const cx = (window.innerWidth / 2 - panX) / zoom + (Math.random() - 0.5) * 100;
+  const cy = (window.innerHeight / 2 - panY) / zoom + (Math.random() - 0.5) * 100;
+  const id = createNode(cat, 'Nový nápad', cx, cy);
+  selectedId = id;
+  render();
+  setTimeout(() => startRename(id), 80);
+});
+
+document.getElementById('btn-connect').addEventListener('click', () => {
+  if (connectMode) exitConnectMode();
+  else enterConnectMode();
+});
+
+document.getElementById('btn-del-edges').addEventListener('click', () => {
+  if (deleteEdgeMode) exitDeleteEdgeMode();
+  else enterDeleteEdgeMode();
+});
+
+document.getElementById('btn-zoom-in').addEventListener('click', () => {
+  zoom = Math.min(3, zoom * 1.2);
+  panX = window.innerWidth/2 - (window.innerWidth/2 - panX) * 1.2;
+  panY = window.innerHeight/2 - (window.innerHeight/2 - panY) * 1.2;
+  render();
+});
+document.getElementById('btn-zoom-out').addEventListener('click', () => {
+  zoom = Math.max(0.2, zoom * 0.85);
+  panX = window.innerWidth/2 - (window.innerWidth/2 - panX) * 0.85;
+  panY = window.innerHeight/2 - (window.innerHeight/2 - panY) * 0.85;
+  render();
+});
+document.getElementById('btn-reset-view').addEventListener('click', () => { zoom = 1; centerView(); });
+
+document.getElementById('btn-save').addEventListener('click', () => { save(); showToast('Uloženo ✓'); });
+document.getElementById('btn-clear').addEventListener('click', () => {
+  if (!confirm('Smazat celou mapu?')) return;
+  nodes = []; edges = []; nextId = 1;
+  localStorage.removeItem('ksh-brainstorm');
+  render();
+});
+
+document.getElementById('btn-summary').addEventListener('click', showSummary);
+document.getElementById('btn-close-summary').addEventListener('click', () => {
+  document.getElementById('summary-overlay').classList.remove('active');
+});
+document.getElementById('btn-copy-summary').addEventListener('click', () => {
+  const text = document.getElementById('summary-text').textContent;
+  navigator.clipboard.writeText(text).then(() => showToast('Zkopírováno do schránky ✓'));
+});
+document.getElementById('summary-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('active');
+});
+
+// ── Double click on canvas = add node ─────────────────────────────────────
+canvas.addEventListener('dblclick', e => {
+  if (e.target !== canvas && e.target !== svgEl) return;
+  const cat = document.getElementById('cat-select').value;
+  const cx = (e.clientX - panX) / zoom;
+  const cy = (e.clientY - panY) / zoom;
+  const id = createNode(cat, 'Nový nápad', cx, cy);
+  selectedId = id;
+  render();
+  setTimeout(() => startRename(id), 80);
+});
+
+// ── Save / load ───────────────────────────────────────────────────────────
+function save() {
+  localStorage.setItem('ksh-brainstorm', JSON.stringify({ nodes, edges, nextId }));
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  Object.assign(t.style, {
+    position: 'fixed', bottom: '60px', left: '50%', transform: 'translateX(-50%)',
+    background: 'rgba(19,19,26,0.95)', border: '1px solid rgba(255,255,255,0.1)',
+    color: '#fff', padding: '8px 20px', borderRadius: '100px',
+    fontSize: '0.82rem', zIndex: 300, backdropFilter: 'blur(12px)',
+    transition: 'opacity 0.3s',
+  });
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = 0; setTimeout(() => t.remove(), 300); }, 1800);
+}
+
+// ── Start ─────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
