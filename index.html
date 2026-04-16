@@ -998,11 +998,12 @@ document.getElementById('ctx-change-cat').addEventListener('click', () => {
 });
 document.getElementById('ctx-add-img').addEventListener('click', () => {
   if (!ctxTargetId) return;
+  const targetId = ctxTargetId; // capture before closeCtxMenu nullifies it
   closeCtxMenu();
   const input = document.getElementById('img-input');
   input.onchange = e => {
     const file = e.target.files[0];
-    if (file && file.type.startsWith('image/')) loadImageToNode(ctxTargetId, file);
+    if (file && file.type.startsWith('image/')) loadImageToNode(targetId, file);
     input.value = '';
     input.onchange = null;
   };
