@@ -1155,13 +1155,20 @@ document.getElementById('file-input').addEventListener('change', e => {
       const data = JSON.parse(ev.target.result);
       if (!data.nodes || !Array.isArray(data.nodes)) throw new Error('Invalid');
 
-      const mode = confirm(
-        'Nahrát ' + data.nodes.length + ' nápadů a ' + (data.edges||[]).length + ' spojů.\n\n' +
-        'OK = SLOUČIT s aktuálními daty\n' +
-        'Zrušit = NAHRADIT aktuální data'
+      // First ask: replace or merge?
+      const wantMerge = confirm(
+        'Soubor obsahuje ' + data.nodes.length + ' nápadů a ' + (data.edges||[]).length + ' spojů.\n\n' +
+        'OK = NAHRADIT aktuální mapu (přepíše vše)\n' +
+        'Zrušit = SLOUČIT (přidá k existujícím)'
       );
 
-      if (mode) {
+      if (wantMerge) {
+        // Replace — exact positions, exact IDs
+        nodes = data.nodes;
+        edges = data.edges || [];
+        nextId = data.nextId || (Math.max(0, ...nodes.map(n => n.id)) + 1);
+        showToast('Mapa nahrazena (' + nodes.length + ' nápadů)');
+      } else {
         // Merge — offset IDs to avoid conflicts
         const maxId = Math.max(nextId, ...nodes.map(n => n.id), 0);
         const idMap = {};
@@ -1175,11 +1182,6 @@ document.getElementById('file-input').addEventListener('change', e => {
         });
         nextId = Math.max(nextId, ...nodes.map(n => n.id)) + 1;
         showToast('Sloučeno: +' + data.nodes.length + ' nápadů');
-      } else {
-        nodes = data.nodes;
-        edges = data.edges || [];
-        nextId = data.nextId || (nodes.length + 1);
-        showToast('Data nahrazena');
       }
 
       save();
