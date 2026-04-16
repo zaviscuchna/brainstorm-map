@@ -1,0 +1,621 @@
+{
+  "nodes": [
+    {
+      "id": 3,
+      "cat": "pravidla",
+      "label": "6 hráčů",
+      "x": -766.4509106658736,
+      "y": -68.45539092483435
+    },
+    {
+      "id": 4,
+      "cat": "pravidla",
+      "label": "5 hráčů je v roli auditora",
+      "x": -591.7372677370229,
+      "y": 14.6161009678916
+    },
+    {
+      "id": 5,
+      "cat": "pravidla",
+      "label": "Jeden hráč je sabotér/ Zrádce",
+      "x": -598.1175978278092,
+      "y": -67.37172014442358
+    },
+    {
+      "id": 6,
+      "cat": "pravidla",
+      "label": "Úkolem týmu auditorů: odhalit zrádce a vyhodit ho z auditu",
+      "x": -351.2353248348702,
+      "y": 6.994190234934134
+    },
+    {
+      "id": 7,
+      "cat": "custom",
+      "label": "Ukol hry:  Vzdělání v rámci auditu",
+      "x": -769.9309604542899,
+      "y": -157.27085545929435
+    },
+    {
+      "id": 9,
+      "cat": "pravidla",
+      "label": "Úkolem zrádce je ve hře zůstat nejdéle do posledních 2 hráčů -poté vyhrál",
+      "x": -348.7437150400712,
+      "y": -98.96326788662368
+    },
+    {
+      "id": 11,
+      "cat": "vizual",
+      "label": "Základní hrací deska",
+      "x": -768.8721685175409,
+      "y": 98.00822775802685
+    },
+    {
+      "id": 12,
+      "cat": "vizual",
+      "label": "6 míst pro hráče",
+      "x": -572.2538426155135,
+      "y": 222.0527028951886
+    },
+    {
+      "id": 13,
+      "cat": "vizual",
+      "label": "Na každém místě prostor pro kartu role, a místo na odložení karet hlasování)",
+      "x": -406.2573554497354,
+      "y": 238.70005213507847
+    },
+    {
+      "id": 16,
+      "cat": "vizual",
+      "label": "Ve prostřed místo pro karty( příběh auditu a další)",
+      "x": -646.3283996273148,
+      "y": 355.5725307552703
+    },
+    {
+      "id": 17,
+      "cat": "vizual",
+      "label": "vysvětlivky",
+      "x": -570.6505449054476,
+      "y": 143.19657780951883
+    },
+    {
+      "id": 19,
+      "cat": "vizual",
+      "label": "fáze hry(styl rafičky na béňo)",
+      "x": -788.566174817882,
+      "y": 498.2440447468483
+    },
+    {
+      "id": 20,
+      "cat": "pravidla",
+      "label": "Den a Noc",
+      "x": -25.25386165326264,
+      "y": -125.53584658293167
+    },
+    {
+      "id": 21,
+      "cat": "pravidla",
+      "label": "ve dne probíhá rozhovor",
+      "x": 154.03759930161016,
+      "y": -137.65827690240607
+    },
+    {
+      "id": 22,
+      "cat": "pravidla",
+      "label": "V noci probíhá anonymní hlasování(kdo jde z kola ven)",
+      "x": -29.4863771250424,
+      "y": -42.5881703191775
+    },
+    {
+      "id": 23,
+      "cat": "forma",
+      "label": "karty",
+      "x": -71.33116975518949,
+      "y": 93.85905760704517
+    },
+    {
+      "id": 24,
+      "cat": "forma",
+      "label": "role",
+      "x": -70.45704578588361,
+      "y": 181.4235825797365
+    },
+    {
+      "id": 25,
+      "cat": "forma",
+      "label": "audit",
+      "x": 303.5571216029936,
+      "y": 162.54207472491157
+    },
+    {
+      "id": 26,
+      "cat": "forma",
+      "label": "problémy",
+      "x": 158.19898116708916,
+      "y": 251.08349953944446
+    },
+    {
+      "id": 27,
+      "cat": "forma",
+      "label": "hlasovací",
+      "x": 381.0069524612167,
+      "y": 88.5047328598431
+    },
+    {
+      "id": 28,
+      "cat": "mechanika",
+      "label": "budou 4 fáze",
+      "x": 50.821717209586645,
+      "y": 341.83385775017194
+    },
+    {
+      "id": 29,
+      "cat": "mechanika",
+      "label": "Při každé fázi se zhoršuje situace v \"místnosti\"",
+      "x": 4.548699694109904,
+      "y": 441.17379650829236
+    },
+    {
+      "id": 30,
+      "cat": "mechanika",
+      "label": "Každým kolem se blíží případný konec hry, když hráči nevyřeší audit a nevyhodí zrádce",
+      "x": 16.386190342898658,
+      "y": 539.1544558920541
+    },
+    {
+      "id": 31,
+      "cat": "mechanika",
+      "label": "Diskuze  hráčů, funguje na základě otázek, prověřování a debaty a auditzu",
+      "x": 390.07285081892417,
+      "y": -144.75352996071302
+    },
+    {
+      "id": 32,
+      "cat": "pravidla",
+      "label": "Pomoc hráčům, kteří ještě nejsou pořádně seznámení s auditem",
+      "x": -431.9313343970475,
+      "y": 139.84852038145755
+    },
+    {
+      "id": 33,
+      "cat": "mechanika",
+      "label": "Průběh kol",
+      "x": 276.53993295414875,
+      "y": 341.5742003683057
+    },
+    {
+      "id": 34,
+      "cat": "mechanika",
+      "label": "Kola (fáze ) jdou po sobě, po každém se vyhlasuje jeden hráč",
+      "x": 585.2791177581058,
+      "y": 368.1600452345677
+    },
+    {
+      "id": 35,
+      "cat": "mechanika",
+      "label": "Průběh jednoho kola",
+      "x": 273.3466694716319,
+      "y": 443.11831814650145
+    },
+    {
+      "id": 36,
+      "cat": "mechanika",
+      "label": "1. počátek kola: odhalení problému",
+      "x": 580.6943638739813,
+      "y": 457.4988703932986
+    },
+    {
+      "id": 37,
+      "cat": "mechanika",
+      "label": "2. diskuze",
+      "x": 493.74254969523975,
+      "y": 546.5205889625593
+    },
+    {
+      "id": 38,
+      "cat": "mechanika",
+      "label": "3.  anonymní hlasování",
+      "x": 382.73817956115965,
+      "y": 616.4585596584617
+    },
+    {
+      "id": 39,
+      "cat": "mechanika",
+      "label": "4. součet hlasů, vyřazení hráče",
+      "x": 159.79431080486847,
+      "y": 678.7114626601166
+    },
+    {
+      "id": 41,
+      "cat": "pravidla",
+      "label": "Hlavní příběhová linie",
+      "x": 577.2770682634814,
+      "y": 158.99674412176415
+    },
+    {
+      "id": 42,
+      "cat": "pravidla",
+      "label": "každý vybere jednoho hráče, kterého by chtěl vyhodit, pro toho hlasuje, hráč s nejvyšším počtem hlasů vypadává",
+      "x": 580.5902574028393,
+      "y": 34.28553014915593
+    },
+    {
+      "id": 43,
+      "cat": "pravidla",
+      "label": "Cílem hry není jen vyhodit zrádce, ale i úspěšně vyřešit dané problémy v audit",
+      "x": 576.9109975988131,
+      "y": 230.57505431245698
+    },
+    {
+      "id": 44,
+      "cat": "forma",
+      "label": "dělení",
+      "x": -222.50380016086908,
+      "y": 707.1415477818796
+    },
+    {
+      "id": 46,
+      "cat": "hraci",
+      "label": "Vedoucí auditor",
+      "x": -51.38039136903643,
+      "y": 819.0157027272261
+    },
+    {
+      "id": 47,
+      "cat": "hraci",
+      "label": "Auditor",
+      "x": -108.50101900780334,
+      "y": 897.9604953292313
+    },
+    {
+      "id": 48,
+      "cat": "hraci",
+      "label": "Specialista/expert",
+      "x": -410.21844432435176,
+      "y": 904.3833293594412
+    },
+    {
+      "id": 49,
+      "cat": "hraci",
+      "label": "Koordinátor/podpora",
+      "x": -461.2058436714963,
+      "y": 811.5920885658046
+    },
+    {
+      "id": 50,
+      "cat": "hraci",
+      "label": "Reviewer/konzultant",
+      "x": -285.52009122928825,
+      "y": 990.5386634315369
+    },
+    {
+      "id": 51,
+      "cat": "forma",
+      "label": "Auditoři",
+      "x": -219.4600910232682,
+      "y": 781.0194313236583
+    },
+    {
+      "id": 52,
+      "cat": "hraci",
+      "label": "zrádce",
+      "x": -387.7448337393676,
+      "y": 696.6895006012195
+    },
+    {
+      "id": 54,
+      "cat": "pravidla",
+      "label": "na své kartě má podrobnější informace ohledně problému (musí si dobře promyslet, kolik toho prozradí protihráčům)",
+      "x": -841.5629267618975,
+      "y": 589.531826274924
+    },
+    {
+      "id": 56,
+      "cat": "pravidla",
+      "label": "mají na kartě informace ohledně auditu, které zrádce nemá(musí si všímat kdo jak reaguje)",
+      "x": 68.08721682029933,
+      "y": 1067.2026472342693
+    },
+    {
+      "id": 58,
+      "cat": "custom",
+      "label": "zajišťuje podklady a dokumentaci",
+      "x": -743.4314800833973,
+      "y": 817.5586038676839
+    },
+    {
+      "id": 59,
+      "cat": "custom",
+      "label": "Podává expertní pohled na specifické oblasti",
+      "x": -700.1655412219918,
+      "y": 892.4315814824249
+    },
+    {
+      "id": 60,
+      "cat": "custom",
+      "label": "Kontroluje a zjišťuje formální kvalitu výstupu",
+      "x": -575.0771642638571,
+      "y": 996.9206314945814
+    },
+    {
+      "id": 61,
+      "cat": "custom",
+      "label": "Řídí a koordinuje tým",
+      "x": 121.2945755409802,
+      "y": 804.2509856169513
+    },
+    {
+      "id": 62,
+      "cat": "custom",
+      "label": "sbírá důkazy, řídí rozhovory, analyzuje dokumenty",
+      "x": 90.49947528101245,
+      "y": 888.8859690096525
+    },
+    {
+      "id": 63,
+      "cat": "custom",
+      "label": "Snaží se splynout s ostatními",
+      "x": -705.0738296280741,
+      "y": 730.8882515705541
+    },
+    {
+      "id": 65,
+      "cat": "poznamka",
+      "label": "Jednoduchý vzhled, bez figurek, karetní hra.",
+      "x": -954.7742322403384,
+      "y": 168.04647398798872
+    },
+    {
+      "id": 66,
+      "cat": "vizual",
+      "label": "Na kartě: Role, popis, informace potřebné ke hře",
+      "x": -358.151522345098,
+      "y": 395.088680386995
+    },
+    {
+      "id": 67,
+      "cat": "pravidla",
+      "label": "čas jednotlivých kol není dané, záleží čistě na hráčích, jak dlouhé a rozsáhlé povedou diskuze",
+      "x": 858.3704966827612,
+      "y": 295.1568119429315
+    },
+    {
+      "id": 68,
+      "cat": "vizual",
+      "label": "každý hráč má 6 kartiček, pomocí kterých anonymně hlasuje",
+      "x": 621.8046670041396,
+      "y": -58.6840548943991
+    }
+  ],
+  "edges": [
+    {
+      "from": 5,
+      "to": 9
+    },
+    {
+      "from": 3,
+      "to": 4
+    },
+    {
+      "from": 6,
+      "to": 4
+    },
+    {
+      "from": 3,
+      "to": 5
+    },
+    {
+      "from": 11,
+      "to": 12
+    },
+    {
+      "from": 11,
+      "to": 17
+    },
+    {
+      "from": 12,
+      "to": 13
+    },
+    {
+      "from": 16,
+      "to": 11
+    },
+    {
+      "from": 11,
+      "to": 19
+    },
+    {
+      "from": 20,
+      "to": 21
+    },
+    {
+      "from": 20,
+      "to": 22
+    },
+    {
+      "from": 23,
+      "to": 24
+    },
+    {
+      "from": 23,
+      "to": 26
+    },
+    {
+      "from": 23,
+      "to": 25
+    },
+    {
+      "from": 23,
+      "to": 27
+    },
+    {
+      "from": 28,
+      "to": 29
+    },
+    {
+      "from": 21,
+      "to": 31
+    },
+    {
+      "from": 19,
+      "to": 30
+    },
+    {
+      "from": 19,
+      "to": 29
+    },
+    {
+      "from": 23,
+      "to": 11
+    },
+    {
+      "from": 17,
+      "to": 32
+    },
+    {
+      "from": 28,
+      "to": 33
+    },
+    {
+      "from": 33,
+      "to": 34
+    },
+    {
+      "from": 33,
+      "to": 35
+    },
+    {
+      "from": 35,
+      "to": 36
+    },
+    {
+      "from": 35,
+      "to": 37
+    },
+    {
+      "from": 35,
+      "to": 38
+    },
+    {
+      "from": 35,
+      "to": 39
+    },
+    {
+      "from": 25,
+      "to": 41
+    },
+    {
+      "from": 27,
+      "to": 38
+    },
+    {
+      "from": 27,
+      "to": 42
+    },
+    {
+      "from": 26,
+      "to": 43
+    },
+    {
+      "from": 24,
+      "to": 44
+    },
+    {
+      "from": 44,
+      "to": 52
+    },
+    {
+      "from": 44,
+      "to": 51
+    },
+    {
+      "from": 49,
+      "to": 51
+    },
+    {
+      "from": 48,
+      "to": 51
+    },
+    {
+      "from": 50,
+      "to": 51
+    },
+    {
+      "from": 47,
+      "to": 51
+    },
+    {
+      "from": 46,
+      "to": 51
+    },
+    {
+      "from": 52,
+      "to": 54
+    },
+    {
+      "from": 46,
+      "to": 56
+    },
+    {
+      "from": 47,
+      "to": 56
+    },
+    {
+      "from": 50,
+      "to": 56
+    },
+    {
+      "from": 48,
+      "to": 56
+    },
+    {
+      "from": 49,
+      "to": 56
+    },
+    {
+      "from": 16,
+      "to": 25
+    },
+    {
+      "from": 31,
+      "to": 37
+    },
+    {
+      "from": 58,
+      "to": 49
+    },
+    {
+      "from": 59,
+      "to": 48
+    },
+    {
+      "from": 60,
+      "to": 50
+    },
+    {
+      "from": 61,
+      "to": 46
+    },
+    {
+      "from": 62,
+      "to": 47
+    },
+    {
+      "from": 63,
+      "to": 52
+    },
+    {
+      "from": 65,
+      "to": 11
+    },
+    {
+      "from": 66,
+      "to": 24
+    },
+    {
+      "from": 33,
+      "to": 67
+    }
+  ],
+  "nextId": 69,
+  "exportedAt": "2026-04-16T10:52:42.027Z"
+}

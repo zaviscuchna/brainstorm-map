@@ -433,9 +433,21 @@ function init() {
       edges = data.edges || [];
       nextId = data.nextId || (nodes.length + 1);
     } catch(e) {}
+    render();
+    centerView();
+  } else {
+    // No local data — load default from data.json
+    fetch('data.json').then(r => r.ok ? r.json() : null).then(data => {
+      if (data && data.nodes) {
+        nodes = data.nodes;
+        edges = data.edges || [];
+        nextId = data.nextId || (nodes.length + 1);
+        save();
+      }
+      render();
+      centerView();
+    }).catch(() => { render(); centerView(); });
   }
-  render();
-  centerView();
 }
 
 // ── Create node ───────────────────────────────────────────────────────────
