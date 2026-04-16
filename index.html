@@ -409,7 +409,23 @@ const modeHint = document.getElementById('mode-hint');
 
 // ── Init ──────────────────────────────────────────────────────────────────
 function init() {
-  const saved = localStorage.getItem('ksh-brainstorm');
+  // Try new key first, then migrate from old key
+  let saved = localStorage.getItem('ksh-brainstorm');
+  if (!saved) {
+    saved = localStorage.getItem('ksh-mindmap');
+    if (saved) {
+      // Migrate old format: level → cat
+      const levelToCat = ['tema', 'pravidla', 'hraci', 'vizual', 'forma'];
+      try {
+        const data = JSON.parse(saved);
+        (data.nodes || []).forEach(n => {
+          if (!n.cat) n.cat = levelToCat[n.level] || 'poznamka';
+        });
+        localStorage.setItem('ksh-brainstorm', JSON.stringify(data));
+        saved = localStorage.getItem('ksh-brainstorm');
+      } catch(e) {}
+    }
+  }
   if (saved) {
     try {
       const data = JSON.parse(saved);
