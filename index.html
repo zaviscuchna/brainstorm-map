@@ -384,6 +384,8 @@
   <div class="tb-sep"></div>
   <button class="tb-btn" id="btn-export-json">📥 JSON</button>
   <button class="tb-btn" id="btn-import-json">📤 Nahrát</button>
+  <button class="tb-btn" id="btn-merge-json">＋ Sloučit</button>
+  <input type="file" id="merge-input" accept=".json" style="display:none" />
   <button class="tb-btn" id="btn-export-pdf">🖨 PDF</button>
   <div class="tb-sep"></div>
   <button class="tb-btn" id="btn-save">💾</button>
@@ -1146,49 +1148,65 @@ document.getElementById('btn-import-json').addEventListener('click', () => {
   document.getElementById('file-input').click();
 });
 
-document.getElementById('file-input').addEventListener('change', e => {
-  const file = e.target.files[0];
+document.getElementById('file-input').addEventListener('change', function(e) {
+  var file = e.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
+  var reader = new FileReader();
+  reader.onload = function(ev) {
     try {
-      const data = JSON.parse(ev.target.result);
-      if (!data.nodes || !Array.isArray(data.nodes)) throw new Error('Invalid');
-
-      // First ask: replace or merge?
-      const wantMerge = confirm(
-        'Soubor obsahuje ' + data.nodes.length + ' nápadů a ' + (data.edges||[]).length + ' spojů.\n\n' +
-        'OK = NAHRADIT aktuální mapu (přepíše vše)\n' +
-        'Zrušit = SLOUČIT (přidá k existujícím)'
-      );
-
-      if (wantMerge) {
-        // Replace — exact positions, exact IDs
-        nodes = data.nodes;
-        edges = data.edges || [];
-        nextId = data.nextId || (Math.max(0, ...nodes.map(n => n.id)) + 1);
-        showToast('Mapa nahrazena (' + nodes.length + ' nápadů)');
-      } else {
-        // Merge — offset IDs to avoid conflicts
-        const maxId = Math.max(nextId, ...nodes.map(n => n.id), 0);
-        const idMap = {};
-        data.nodes.forEach(n => {
-          const newId = maxId + n.id;
-          idMap[n.id] = newId;
-          nodes.push({ ...n, id: newId, x: n.x + 50, y: n.y + 50 });
-        });
-        (data.edges || []).forEach(e => {
-          edges.push({ from: idMap[e.from], to: idMap[e.to] });
-        });
-        nextId = Math.max(nextId, ...nodes.map(n => n.id)) + 1;
-        showToast('Sloučeno: +' + data.nodes.length + ' nápadů');
+      var data = JSON.parse(ev.target.result);
+      if (!data.nodes || !Array.isArray(data.nodes)) {
+        showToast('Chyba: neplatný JSON soubor');
+        return;
       }
-
+      // Always replace — exact positions, exact IDs
+      nodes = data.nodes;
+      edges = data.edges || [];
+      nextId = data.nextId || (Math.max(0, ...nodes.map(function(n) { return n.id; })) + 1);
       save();
       render();
       centerView();
+      showToast('Mapa nahrána ✓ (' + nodes.length + ' nápadů, ' + edges.length + ' spojů)');
     } catch (err) {
-      showToast('Chyba: neplatný JSON soubor');
+      showToast('Chyba: ' + err.message);
+      console.error('Import error:', err);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+// ── Merge JSON (sloučit) ──────────────────────────────────────────────────
+document.getElementById('btn-merge-json').addEventListener('click', function() {
+  document.getElementById('merge-input').click();
+});
+
+document.getElementById('merge-input').addEventListener('change', function(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      var data = JSON.parse(ev.target.result);
+      if (!data.nodes || !Array.isArray(data.nodes)) {
+        showToast('Chyba: neplatný JSON');
+        return;
+      }
+      var maxId = Math.max(nextId, ...nodes.map(function(n) { return n.id; }), 0);
+      var idMap = {};
+      data.nodes.forEach(function(n) {
+        var newId = maxId + n.id;
+        idMap[n.id] = newId;
+        nodes.push({ id: newId, cat: n.cat, label: n.label, x: n.x + 60, y: n.y + 60, image: n.image, width: n.width, imgWidth: n.imgWidth });
+      });
+      (data.edges || []).forEach(function(ed) {
+        if (idMap[ed.from] && idMap[ed.to]) edges.push({ from: idMap[ed.from], to: idMap[ed.to] });
+      });
+      nextId = Math.max(nextId, ...nodes.map(function(n) { return n.id; })) + 1;
+      save(); render(); centerView();
+      showToast('Sloučeno: +' + data.nodes.length + ' nápadů');
+    } catch (err) {
+      showToast('Chyba: ' + err.message);
     }
   };
   reader.readAsText(file);
