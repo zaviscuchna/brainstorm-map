@@ -149,20 +149,20 @@
       padding: 10px 18px;
       font-size: 0.85rem;
       cursor: pointer;
-      transition: box-shadow 0.2s, transform 0.15s;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
       text-align: left;
-      min-width: 120px;
-      max-width: 260px;
+      min-width: 80px;
       word-break: break-word;
       line-height: 1.35;
       border: 1.5px solid transparent;
+      overflow: hidden;
     }
-    .node:hover { transform: scale(1.03); }
+    .node:hover { box-shadow: 0 0 0 1px rgba(255,255,255,0.15); }
     .node.selected { outline: 2px solid rgba(255,255,255,0.5); outline-offset: 3px; }
     .node.connect-target { outline: 2px solid rgba(99,102,241,0.8); outline-offset: 3px; }
+    .node.dragover { outline: 2px dashed rgba(99,102,241,0.8); outline-offset: 3px; }
     .node .cat-label {
       font-size: 0.6rem;
       font-weight: 800;
@@ -174,6 +174,68 @@
     .node .node-text {
       font-weight: 600;
     }
+    .node .node-img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-top: 6px;
+      display: block;
+      pointer-events: none;
+    }
+    .node .img-drop-zone {
+      width: 100%;
+      padding: 8px;
+      margin-top: 6px;
+      border: 1.5px dashed rgba(255,255,255,0.2);
+      border-radius: 8px;
+      text-align: center;
+      font-size: 0.68rem;
+      color: rgba(255,255,255,0.35);
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .node .img-drop-zone:hover { border-color: rgba(99,102,241,0.5); color: rgba(255,255,255,0.6); }
+    .node .img-remove {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.6);
+      color: #f87171;
+      border: none;
+      font-size: 12px;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+    }
+    .node:hover .img-remove { display: flex; }
+
+    /* ── Resize handle ── */
+    .resize-handle {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 16px;
+      height: 16px;
+      cursor: nwse-resize;
+      opacity: 0;
+      transition: opacity 0.15s;
+      z-index: 5;
+    }
+    .resize-handle::after {
+      content: '';
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      width: 8px;
+      height: 8px;
+      border-right: 2px solid rgba(255,255,255,0.35);
+      border-bottom: 2px solid rgba(255,255,255,0.35);
+    }
+    .node:hover .resize-handle, .node.selected .resize-handle { opacity: 1; }
 
     /* Category colours */
     .node[data-cat="pravidla"] { background: linear-gradient(135deg, #065f46, #059669); border-color: rgba(5,150,105,0.4); box-shadow: 0 0 14px rgba(5,150,105,0.15); color: #fff; }
@@ -327,6 +389,7 @@
   <button class="tb-btn" id="btn-save">💾</button>
   <button class="tb-btn danger" id="btn-clear">Smazat vše</button>
   <input type="file" id="file-input" accept=".json" style="display:none" />
+  <input type="file" id="img-input" accept="image/*" style="display:none" />
 </div>
 
 <!-- Mode hint -->
@@ -351,6 +414,7 @@
 <div id="ctx-menu">
   <div class="ctx-item" id="ctx-rename">✏️ Přejmenovat</div>
   <div class="ctx-item" id="ctx-change-cat">🏷 Změnit kategorii</div>
+  <div class="ctx-item" id="ctx-add-img">🖼 Přidat obrázek</div>
   <div class="ctx-item" id="ctx-connect-from">🔗 Spojit s jiným</div>
   <div class="ctx-item" id="ctx-disconnect">✂️ Odpojit vše</div>
   <div class="ctx-sep"></div>
@@ -518,21 +582,110 @@ function render() {
     el.dataset.cat = node.cat || 'poznamka';
 
     const catInfo = CATEGORIES[node.cat] || CATEGORIES.poznamka;
-    el.innerHTML = `<span class="cat-label">${catInfo.label}</span><span class="node-text">${escHtml(node.label)}</span>`;
+    let html = '<span class="cat-label">' + catInfo.label + '</span>';
+    html += '<span class="node-text">' + escHtml(node.label) + '</span>';
 
+    // Image
+    if (node.image) {
+      html += '<img class="node-img" src="' + node.image + '" style="' + (node.imgWidth ? 'width:' + node.imgWidth + 'px' : '') + '" />';
+      html += '<button class="img-remove" title="Odstranit obrázek">✕</button>';
+    }
+
+    // Resize handle
+    html += '<div class="resize-handle"></div>';
+
+    el.innerHTML = html;
+
+    // Size
+    if (node.width) el.style.width = node.width + 'px';
     el.style.left = (node.x * zoom + panX) + 'px';
     el.style.top  = (node.y * zoom + panY) + 'px';
-    el.style.transform = `scale(${zoom})`;
+    el.style.transform = 'scale(' + zoom + ')';
     el.style.transformOrigin = 'top left';
     canvas.appendChild(el);
 
-    el.addEventListener('mousedown', e => onNodeMousedown(e, node.id));
+    // Events
+    el.addEventListener('mousedown', e => {
+      if (e.target.classList.contains('resize-handle') || e.target.classList.contains('img-remove')) return;
+      onNodeMousedown(e, node.id);
+    });
     el.addEventListener('dblclick', e => { e.stopPropagation(); startRename(node.id); });
     el.addEventListener('contextmenu', e => { e.preventDefault(); showCtxMenu(e, node.id); });
+
+    // Image remove button
+    const removeBtn = el.querySelector('.img-remove');
+    if (removeBtn) {
+      removeBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        node.image = null;
+        node.imgWidth = null;
+        save(); render();
+        showToast('Obrázek odstraněn');
+      });
+    }
+
+    // Resize handle
+    const resizeH = el.querySelector('.resize-handle');
+    resizeH.addEventListener('mousedown', e => {
+      e.stopPropagation();
+      e.preventDefault();
+      const startX = e.clientX;
+      const startW = el.offsetWidth;
+      const onMove = ev => {
+        const newW = Math.max(80, startW + (ev.clientX - startX) / zoom);
+        node.width = Math.round(newW);
+        el.style.width = node.width + 'px';
+        drawEdges();
+      };
+      const onUp = () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        save();
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+
+    // Drag & drop images onto node
+    el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('dragover'); });
+    el.addEventListener('dragleave', () => el.classList.remove('dragover'));
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      el.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) {
+        loadImageToNode(node.id, file);
+      }
+    });
   });
 
   drawEdges();
   updateZoomLabel();
+}
+
+// ── Load image into node (as base64) ──────────────────────────────────────
+function loadImageToNode(nodeId, file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const node = getNode(nodeId);
+    if (!node) return;
+    // Resize large images to save localStorage space
+    const img = new Image();
+    img.onload = () => {
+      const maxW = 600;
+      let w = img.width, h = img.height;
+      if (w > maxW) { h = h * (maxW / w); w = maxW; }
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      node.image = c.toDataURL('image/jpeg', 0.7);
+      node.imgWidth = Math.min(w, node.width || 240);
+      save(); render();
+      showToast('Obrázek přidán');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
@@ -843,6 +996,18 @@ document.getElementById('ctx-change-cat').addEventListener('click', () => {
   node.cat = cats[(idx + 1) % cats.length];
   save(); render(); closeCtxMenu();
 });
+document.getElementById('ctx-add-img').addEventListener('click', () => {
+  if (!ctxTargetId) return;
+  closeCtxMenu();
+  const input = document.getElementById('img-input');
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) loadImageToNode(ctxTargetId, file);
+    input.value = '';
+    input.onchange = null;
+  };
+  input.click();
+});
 document.getElementById('ctx-connect-from').addEventListener('click', () => {
   closeCtxMenu();
   enterConnectMode();
@@ -912,6 +1077,22 @@ document.getElementById('btn-copy-summary').addEventListener('click', () => {
 });
 document.getElementById('summary-overlay').addEventListener('click', e => {
   if (e.target === e.currentTarget) e.currentTarget.classList.remove('active');
+});
+
+// ── Drag image onto canvas = new node with image ──────────────────────────
+canvas.addEventListener('dragover', e => e.preventDefault());
+canvas.addEventListener('drop', e => {
+  // Only handle drops on canvas background, not on nodes
+  if (e.target !== canvas && e.target !== svgEl) return;
+  e.preventDefault();
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) {
+    const cat = document.getElementById('cat-select').value;
+    const cx = (e.clientX - panX) / zoom;
+    const cy = (e.clientY - panY) / zoom;
+    const id = createNode(cat, file.name.replace(/\.[^.]+$/, ''), cx, cy);
+    loadImageToNode(id, file);
+  }
 });
 
 // ── Double click on canvas = add node ─────────────────────────────────────
